@@ -5,19 +5,19 @@ void check(bool cond) {
 }
 
 void check_seq(uint8_t *data, int l, int r) {
-  for (int i = l; i < r; i ++) {
-    check(data[i] == i);
+  for (int i = l; i < r; i++) {
+    check(data[i] == (uint8_t)i);
   }
 }
 
 void check_eq(uint8_t *data, int l, int r, int val) {
-  for (int i = l; i < r; i ++) {
+  for (int i = l; i < r; i++) {
     check(data[i] == val);
   }
 }
 
 void init_seq(uint8_t *data, int n) {
-  for (int i = 0; i < n; i ++) {
+  for (int i = 0; i < n; i++) {
     data[i] = i;
   }
 }
