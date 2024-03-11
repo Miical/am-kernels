@@ -1,4 +1,5 @@
 #include "trap.h"
+#define SRAM_START 0x0f000000
 #define SPI_START 0x10001000
 #define FLASH_START 0x30000000
 
@@ -46,11 +47,24 @@ uint32_t flash_read(uint32_t addr) {
     *CTRL = 0x940;
 
     while (((*CTRL) >> 8) & 1) {}
+    *SS = 0;
 
-    return flash_data(*Rx1);
+    uint32_t data = flash_data(*Rx1);
+    // printf("flash read addr = %x, data = %x\n", addr, data);
+    return data;
 }
 
+
+
 int main() {
-    printf("flash read: %x\n", flash_read(FLASH_START + 0x4));
+    const uint32_t max_addr = 0x18;
+    const uint32_t sram_prog_addr = SRAM_START + 0x1200;
+    for (uint32_t i = 0; i < max_addr; i += 0x4) {
+        uint32_t data = flash_read(FLASH_START + i);
+        *(uint32_t *)(sram_prog_addr + i) = data;
+    }
+    void (*sram_prog)() = (void (*)())sram_prog_addr;
+    sram_prog();
+
     return 0;
 }
