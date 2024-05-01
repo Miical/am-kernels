@@ -3,8 +3,9 @@
 #define LINUX_IMAGE_IN_FLASH 0x30800000
 #define DTB_IN_FLASH 0x30880000
 
-#define LINUX_START 0xa0000000
-#define LINUX_IMAGE_SIZE 0x36FFF0
+#define RAM_SIZE = 0x6000000
+#define LINUX_START 0x80000000
+#define LINUX_IMAGE_SIZE 0x269A00
 
 #define DTB_START (LINUX_START + LINUX_IMAGE_SIZE)
 #define DTB_SIZE 0x800
@@ -21,12 +22,13 @@ int main() {
 
     printf("Load Linux Image...\n");
 
-    for (int progress = 0; progress < 100; progress++) {
-        int start = progress * (LINUX_IMAGE_SIZE / 100);
-        int end = (progress + 1) * (LINUX_IMAGE_SIZE / 100);
+    uint32_t block = ((LINUX_IMAGE_SIZE / 100) & (~0x3)) + 4;
+    for (uint32_t progress = 0; progress < 100; progress++) {
+        uint32_t start = progress * block;
+        uint32_t end = (progress + 1) * block;
         if (end > LINUX_IMAGE_SIZE) end = LINUX_IMAGE_SIZE;
 
-        for (int i = start; i < end; i += 4) {
+        for (uint32_t i = start; i < end; i += 4) {
             uint32_t* flash_addr = (uint32_t*)(LINUX_IMAGE_IN_FLASH + i);
             uint32_t* ram_addr = (uint32_t*)(LINUX_START + i);
             *ram_addr = *flash_addr;
