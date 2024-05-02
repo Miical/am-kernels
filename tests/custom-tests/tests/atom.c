@@ -75,5 +75,35 @@ int main() {
     check(b == 0x12345678);
     check(*(volatile uint32_t *)addr == 0x87654321);
 
+    // lr.w and sc.w
+    // test 1
+    addr = 0x80100000;
+    asm volatile("sw %0, 0(%1)" : : "r"(0x1234), "r"(addr));
+    asm volatile("lr.w %0, 0(%1)" : "=r"(a) : "r"(addr));
+    check(a == 0x1234);
+    asm volatile("sc.w %0, %1, 0(%2)" : "=r"(b) : "r"(0x5678), "r"(addr));
+    check(b == 0);
+    check(*(volatile uint32_t *)addr == 0x5678);
+
+    // test 2
+    addr = 0x80100000;
+    asm volatile("sw %0, 0(%1)" : : "r"(0x1234), "r"(addr));
+    asm volatile("lr.w %0, 0(%1)" : "=r"(a) : "r"(addr));
+    check(a == 0x1234);
+    asm volatile("sw %0, 0(%1)" : : "r"(0x5678), "r"(addr));
+    asm volatile("sc.w %0, %1, 0(%2)" : "=r"(b) : "r"(0x9abc), "r"(addr));
+    check(b == 1);
+    check(*(volatile uint32_t *)addr == 0x5678);
+
+    // test 3
+    addr = 0x80100000;
+    asm volatile("sw %0, 0(%1)" : : "r"(0x1234), "r"(addr));
+    asm volatile("lr.w %0, 0(%1)" : "=r"(a) : "r"(addr));
+    check(a == 0x1234);
+    asm volatile("sw %0, 0(%1)" : : "r"(0x5678), "r"(addr + 4));
+    asm volatile("sc.w %0, %1, 0(%2)" : "=r"(b) : "r"(0x9abc), "r"(addr));
+    check(b == 0);
+    check(*(volatile uint32_t *)addr == 0x9abc);
+
     return 0;
 }
