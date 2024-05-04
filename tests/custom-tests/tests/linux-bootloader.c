@@ -1,24 +1,27 @@
 #include "trap.h"
+#include <sys/types.h>
 
 #define LINUX_IMAGE_IN_FLASH 0x30800000
-#define DTB_IN_FLASH 0x30880000
+#define DTB_IN_FLASH 0x30c00000
 
-#define RAM_SIZE = 0x6000000
+#define RAM_SIZE 0x6000000
 #define LINUX_START 0x80000000
-#define LINUX_IMAGE_SIZE 0x269A00
+#define LINUX_IMAGE_SIZE 0x26A370
 
-#define DTB_START (LINUX_START + LINUX_IMAGE_SIZE)
-#define DTB_SIZE 0x800
+#define DTB_SIZE 0x600
+#define DTB_START 0x85fff940
 
 int main() {
     printf("[Linux Bootloader]\n");
     printf("Load Device Tree Blob...\n");
 
-    for (int i = 0; i < DTB_SIZE; i += 4) {
+    for (uint32_t i = 0; i < DTB_SIZE; i += 4) {
         uint32_t* flash_addr = (uint32_t*)(DTB_IN_FLASH + i);
         uint32_t* ram_addr = (uint32_t*)(DTB_START + i);
         *ram_addr = *flash_addr;
     }
+
+    printf("Device Tree Blob is loaded at 0x%x\n", DTB_START);
 
     printf("Load Linux Image...\n");
 
@@ -37,13 +40,12 @@ int main() {
     }
 
     printf("\nJump to Linux Image...\n");
+    asm volatile("fence.i");
 
     asm volatile("mv a0, zero");
     asm volatile("li a1, %0" : : "i"(DTB_START));
-    asm volatile("lui a1, %0" : : "i"(DTB_START >> 12));
 
     asm volatile("li ra, %0" : : "i"(LINUX_START));
-    asm volatile("lui ra, %0" : : "i"(LINUX_START >> 12));
     asm volatile("jr ra");
 
     return 0;
