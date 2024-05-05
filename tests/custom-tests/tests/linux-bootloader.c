@@ -11,6 +11,10 @@
 #define DTB_SIZE 0x600
 #define DTB_START 0x85fff940
 
+#define KERNEL_CMD_SIZE 13
+#define KERNEL_CMD_START (DTB_START + 0xc0)
+const char* kernel_command_line = "console=hvc0";
+
 int main() {
     printf("[Linux Bootloader]\n");
     printf("Load Device Tree Blob...\n");
@@ -19,6 +23,11 @@ int main() {
         uint32_t* flash_addr = (uint32_t*)(DTB_IN_FLASH + i);
         uint32_t* ram_addr = (uint32_t*)(DTB_START + i);
         *ram_addr = *flash_addr;
+    }
+
+    for (uint32_t i = 0; i < KERNEL_CMD_SIZE; i++) {
+        char* ram_addr = (char*)(KERNEL_CMD_START + i);
+        *ram_addr = kernel_command_line[i];
     }
 
     printf("Device Tree Blob is loaded at 0x%x\n", DTB_START);
